@@ -2,9 +2,9 @@ package nsof
 
 import (
 	"fmt"
+	"io"
 	"strconv"
 	"unicode/utf16"
-	"io"
 )
 
 type Data []byte
@@ -231,7 +231,7 @@ func NewImmediate(data *Data, objectStream *ObjectStream) Object {
 }
 
 type Slot struct {
-	key Object
+	key   Object
 	value Object
 }
 
@@ -374,7 +374,7 @@ func (str *String) ReadNSOF(data *Data, objectStream *ObjectStream) Object {
 
 func (str *String) WriteNSOF(data *Data) {
 	*data = append(*data, STRING)
-	data.EncodeXLong(int32(len(str.value)*2))
+	data.EncodeXLong(int32(len(str.value) * 2))
 	for i := 0; i < len(str.value); i++ {
 		*data = append(*data, 0, str.value[i])
 	}
@@ -433,19 +433,71 @@ func (character *UnicodeCharacter) ReadNSOF(data *Data, objectStream *ObjectStre
 
 func (character *UnicodeCharacter) WriteNSOF(data *Data) {
 	*data = append(*data, UNICODECHARACTER)
-	*data = append(*data, byte(character.value >> 8), byte(character.value))
+	*data = append(*data, byte(character.value>>8), byte(character.value))
 }
 
 func (character *UnicodeCharacter) String() string {
 	return fmt.Sprintf("%c", character.value)
 }
 
-func NewArray() *Object {
-	return nil
+type Array struct {
+	objects []Object
+	class   Object
 }
 
-func NewSmallRect() *Object {
-	return nil
+func NewArray() *Array {
+	return &Array{}
+}
+
+func (array *Array) ReadNSOF(data *Data, objectStream *ObjectStream) Object {
+	*objectStream = append(*objectStream, array)
+	array.class = data.DecodeObject(objectStream)
+	for length := data.DecodeXLong(); length > 0; length-- {
+		array.objects = append(array.objects, data.DecodeObject(objectStream))
+	}
+	return array
+}
+
+func (array *Array) WriteNSOF(data *Data) {
+	*data = append(*data, ARRAY)
+	data.EncodeXLong(int32(len(array.objects)))
+	array.class.WriteNSOF(data)
+	for _, object := range array.objects {
+		object.WriteNSOF(data)
+	}
+}
+
+func (array *Array) String() string {
+	return fmt.Sprintf("%v", array.objects)
+}
+
+type SmallRect struct {
+	left   byte
+	top    byte
+	right  byte
+	bottom byte
+}
+
+func NewSmallRect() *SmallRect {
+	return &SmallRect{}
+}
+
+func (smallRect *SmallRect) ReadNSOF(data *Data, objectStream *ObjectStream) Object {
+	*objectStream = append(*objectStream, smallRect)
+	smallRect.top = (*data)[0]
+	smallRect.left = (*data)[1]
+	smallRect.bottom = (*data)[2]
+	smallRect.right = (*data)[3]
+	*data = (*data)[4:]
+	return smallRect
+}
+
+func (smallRect *SmallRect) WriteNSOF(data *Data) {
+	*data = append(*data, ARRAY, smallRect.top, smallRect.left, smallRect.bottom, smallRect.right)
+}
+
+func (smallRect *SmallRect) String() string {
+	return fmt.Sprintf("%d %d %d %d", smallRect.top, smallRect.left, smallRect.bottom, smallRect.right)
 }
 
 func NewLargeBinary() *Object {
@@ -478,13 +530,13 @@ func (data *Data) DecodeObject(stream *ObjectStream) Object {
 			object = NewCharacter()
 		case UNICODECHARACTER:
 			object = NewUnicodeCharacter()
-			/*
 		case ARRAY:
 			object = NewArray()
 		case SMALLRECT:
 			object = NewSmallRect()
-		case LARGEBINARY:
-			object = NewLargeBinary()
+			/*
+				case LARGEBINARY:
+					object = NewLargeBinary()
 			*/
 		default:
 			panic(fmt.Sprintf("Parsing type %d not implemented. Data: %x\n", objtype, (*data)[:10]))
