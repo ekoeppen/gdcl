@@ -338,7 +338,6 @@ type Precedent struct {
 
 func (precedent *Precedent) ReadNSOF(data *Data, objectStream *ObjectStream) Object {
 	precedent.reference = data.DecodeXLong()
-	*objectStream = append(*objectStream, precedent)
 	return precedent
 }
 
@@ -451,8 +450,9 @@ func NewArray() *Array {
 
 func (array *Array) ReadNSOF(data *Data, objectStream *ObjectStream) Object {
 	*objectStream = append(*objectStream, array)
+	length := int(data.DecodeXLong())
 	array.class = data.DecodeObject(objectStream)
-	for length := data.DecodeXLong(); length > 0; length-- {
+	for i := 0; i < length; i++ {
 		array.objects = append(array.objects, data.DecodeObject(objectStream))
 	}
 	return array
