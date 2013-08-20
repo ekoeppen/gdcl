@@ -500,8 +500,27 @@ func (smallRect *SmallRect) String() string {
 	return fmt.Sprintf("%d %d %d %d", smallRect.top, smallRect.left, smallRect.bottom, smallRect.right)
 }
 
-func NewLargeBinary() *Object {
-	return nil
+type LargeBinary struct {
+	class               Object
+	compressed          bool
+	compander           string
+	companderParameters string
+	data                []byte
+}
+
+func NewLargeBinary() *LargeBinary {
+	return &LargeBinary{}
+}
+
+func (largeBinary *LargeBinary) ReadNSOF(data *Data, objectStream *ObjectStream) Object {
+	return largeBinary
+}
+
+func (largeBinary *LargeBinary) WriteNSOF(data *Data) {
+}
+
+func (largeBinary *LargeBinary) String() string {
+	return fmt.Sprintf("<binary, %d bytes>", len(largeBinary.data))
 }
 
 func (data *Data) DecodeObject(stream *ObjectStream) Object {
@@ -534,10 +553,8 @@ func (data *Data) DecodeObject(stream *ObjectStream) Object {
 			object = NewArray()
 		case SMALLRECT:
 			object = NewSmallRect()
-			/*
-				case LARGEBINARY:
-					object = NewLargeBinary()
-			*/
+		case LARGEBINARY:
+			object = NewLargeBinary()
 		default:
 			panic(fmt.Sprintf("Parsing type %d not implemented. Data: %x\n", objtype, (*data)[:10]))
 		}
