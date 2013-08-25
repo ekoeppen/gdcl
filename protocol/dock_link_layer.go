@@ -152,6 +152,9 @@ const (
 	TEST                         = 0x74657374
 	HELLO                        = 0x68656c6f
 	SOUP_INFO                    = 0x73696e66
+	APP_DATA                     = 0x00000001
+	APP_QUIT                     = 0x00000002
+	APP_DISCONNECT               = 0x00000003
 )
 
 type DantePacketCommand struct {
@@ -209,8 +212,8 @@ func (packet *DantePacket) ToBinary() []byte {
 	binary.Write(&buf, binary.BigEndian, uint32(len(packet.data)))
 	if len(packet.data) > 0 {
 		buf.Write(packet.data)
-		if len(packet.data) % 4 != 0 {
-			pad := 4 - len(packet.data) % 4
+		if len(packet.data)%4 != 0 {
+			pad := 4 - len(packet.data)%4
 			buf.Write(make([]byte, pad, pad))
 		}
 	}
@@ -236,7 +239,13 @@ func (layer *DockLinkLayer) writer() {
 	go func() {
 		for {
 			packet := <-layer.FromApplication
-			layer.ToMNPConnection <- packet.ToBinary()
+			if packet.command == APP_DATA {
+				layer.ToMNPConnection <- packet.ToBinary()
+			} else {
+				for i := 0; i < len(layer.modules); i++ {
+					layer.modules[i].handlePacket(&packet)
+				}
+			}
 		}
 	}()
 }
