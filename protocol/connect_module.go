@@ -109,6 +109,7 @@ func password(state int, input interface{}, output interface{}, data interface{}
 }
 
 func (module *ConnectModule) handlePacket(packet *DantePacket) {
+	log.Printf("Connection: %x\n", packet.command);
 	module.state = fsm.Transition(module.stateTable, module.state, packet, nil, module)
 }
 

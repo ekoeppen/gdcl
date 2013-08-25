@@ -9,6 +9,10 @@ import (
 )
 
 const (
+	APP_DATA                     = 0x00000001
+	APP_QUIT                     = 0x00000002
+	APP_DISCONNECT               = 0x00000003
+	LAST_APP_COMMAND             = 0x32323232
 	NEWT                         = 0x6e657774
 	DOCK                         = 0x646f636b
 	LONGDATA                     = 0x6c647461
@@ -152,9 +156,6 @@ const (
 	TEST                         = 0x74657374
 	HELLO                        = 0x68656c6f
 	SOUP_INFO                    = 0x73696e66
-	APP_DATA                     = 0x00000001
-	APP_QUIT                     = 0x00000002
-	APP_DISCONNECT               = 0x00000003
 )
 
 type DantePacketCommand struct {
@@ -239,7 +240,7 @@ func (layer *DockLinkLayer) writer() {
 	go func() {
 		for {
 			packet := <-layer.FromApplication
-			if packet.command == APP_DATA {
+			if packet.command > LAST_APP_COMMAND {
 				layer.ToMNPConnection <- packet.ToBinary()
 			} else {
 				for i := 0; i < len(layer.modules); i++ {
