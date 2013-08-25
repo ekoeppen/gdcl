@@ -70,7 +70,7 @@ func sendLinkRequestResponse(state int, input interface{}, output interface{}, d
 		1, 6, 1, 0, 0, 0, 0, 255,
 		2, 1, framingMode,
 		3, 1, maxOutstanding,
-		4, 2, byte(layer.maxInfoLength & 0xff), byte(layer.maxInfoLength >> 8),
+		4, 2, 64, 0,
 		8, 1, dataPhaseOpt}
 	layer.outstandingPackets = make([]OutstandingPacket, 0, maxOutstanding)
 	layer.ToPacketLayer <- buf
