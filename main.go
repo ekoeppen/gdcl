@@ -21,7 +21,7 @@ func nsofTest() {
 	ioutil.WriteFile("/tmp/g", out, 0644)
 }
 
-func dataHandler(receivedData <-chan []byte, sentData chan<- []byte, commands <-chan byte) {
+func dataHandler(receivedData <-chan protocol.DantePacket, sentData chan<- protocol.DantePacket, commands <-chan byte) {
 	for {
 		select {
 		case packet := <-receivedData:

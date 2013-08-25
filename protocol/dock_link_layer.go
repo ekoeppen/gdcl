@@ -165,8 +165,8 @@ type DantePacketHandler interface {
 type DockLinkLayer struct {
 	FromMNPConnection chan []byte
 	ToMNPConnection   chan []byte
-	FromApplication   chan []byte
-	ToApplication     chan []byte
+	FromApplication   chan DantePacket
+	ToApplication     chan DantePacket
 	modules           []DantePacketHandler
 }
 
@@ -235,8 +235,8 @@ func (layer *DockLinkLayer) reader() {
 func (layer *DockLinkLayer) writer() {
 	go func() {
 		for {
-			buf := <-layer.FromApplication
-			layer.ToMNPConnection <- buf
+			packet := <-layer.FromApplication
+			layer.ToMNPConnection <- packet.ToBinary()
 		}
 	}()
 }
@@ -248,8 +248,8 @@ func (layer *DockLinkLayer) AddModule(module DantePacketHandler) {
 func DockLinkLayerNew(fromMNPConnection chan []byte, toMNPConnection chan []byte) *DockLinkLayer {
 	dockLinkLayer.FromMNPConnection = fromMNPConnection
 	dockLinkLayer.ToMNPConnection = toMNPConnection
-	dockLinkLayer.FromApplication = make(chan []byte)
-	dockLinkLayer.ToApplication = make(chan []byte)
+	dockLinkLayer.FromApplication = make(chan DantePacket)
+	dockLinkLayer.ToApplication = make(chan DantePacket)
 	dockLinkLayer.reader()
 	dockLinkLayer.writer()
 	return &dockLinkLayer

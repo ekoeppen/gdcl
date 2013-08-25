@@ -13,26 +13,26 @@ type LoadPackageModule struct {
 	state       int
 	stateTable  map[int][]fsm.State
 	packageData []byte
-	ToDockLink  chan []byte
+	ToDockLink  chan DantePacket
 }
 
 func loadPackage(state int, input interface{}, output interface{}, data interface{}) {
 	module := data.(*LoadPackageModule)
 	packet := DantePacketNew(LOAD_PACKAGE, module.packageData)
-	module.ToDockLink <- packet.ToBinary()
+	module.ToDockLink <- *packet
 }
 
 func disconnect(state int, input interface{}, output interface{}, data interface{}) {
 	module := data.(*LoadPackageModule)
 	packet := DantePacketNew(DISCONNECT, []byte{})
-	module.ToDockLink <- packet.ToBinary()
+	module.ToDockLink <- *packet
 }
 
 func (module *LoadPackageModule) handlePacket(packet *DantePacket) {
 	module.state = fsm.Transition(module.stateTable, module.state, packet, nil, module)
 }
 
-func LoadPackageModuleNew(toDockLink chan []byte, packageData []byte) *LoadPackageModule {
+func LoadPackageModuleNew(toDockLink chan DantePacket, packageData []byte) *LoadPackageModule {
 	var module LoadPackageModule
 	module.ToDockLink = toDockLink
 	module.packageData = packageData
