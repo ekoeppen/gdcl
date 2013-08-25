@@ -64,6 +64,6 @@ func serialTest(session byte) {
 }
 
 func main() {
-	nsofTest()
-	//serialTest(protocol.SESSION_LOAD_PACKAGE)
+	//nsofTest()
+	serialTest(protocol.SESSION_LOAD_PACKAGE)
 }
