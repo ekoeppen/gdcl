@@ -98,6 +98,12 @@ func setTimeout(state int, input interface{}, output interface{}, data interface
 	module.ToDockLink <- *packet
 }
 
+func appDisconnect(state int, input interface{}, output interface{}, data interface{}) {
+	module := data.(*ConnectModule)
+	packet := DantePacketNew(DISCONNECT, []byte{})
+	module.ToDockLink <- *packet
+}
+
 func password(state int, input interface{}, output interface{}, data interface{}) {
 	module := data.(*ConnectModule)
 	var buf bytes.Buffer
@@ -118,6 +124,7 @@ func ConnectModuleNew(toDockLink chan DantePacket, sessionType byte) *ConnectMod
 	module.sessionType = sessionType
 	if module.sessionType == SESSION_NONE {
 		module.stateTable = map[int][]fsm.State{
+			fsm.ANY:           {{Input: DantePacketCommand{APP_DISCONNECT}, NewState: CONN_IDLE, Action: appDisconnect}},
 			CONN_IDLE:         {{Input: DantePacketCommand{REQUEST_TO_DOCK}, NewState: CONN_INITIATE, Action: requestToDock}},
 			CONN_INITIATE:     {{Input: DantePacketCommand{NEWTON_NAME}, NewState: CONN_DESKTOP_INFO, Action: desktopInfo}},
 			CONN_DESKTOP_INFO: {{Input: DantePacketCommand{NEWTON_INFO}, NewState: CONN_WHICH_ICONS, Action: whichIcons}},
@@ -128,6 +135,7 @@ func ConnectModuleNew(toDockLink chan DantePacket, sessionType byte) *ConnectMod
 		}
 	} else {
 		module.stateTable = map[int][]fsm.State{
+			fsm.ANY:          {{Input: DantePacketCommand{APP_DISCONNECT}, NewState: CONN_IDLE, Action: appDisconnect}},
 			CONN_IDLE:        {{Input: DantePacketCommand{REQUEST_TO_DOCK}, NewState: CONN_INITIATE, Action: requestToDock}},
 			CONN_INITIATE:    {{Input: DantePacketCommand{NEWTON_NAME}, NewState: CONN_SET_TIMEOUT, Action: setTimeout}},
 			CONN_SET_TIMEOUT: {{Input: DantePacketCommand{RESULT}, NewState: CONN_UP}},

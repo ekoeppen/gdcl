@@ -66,7 +66,7 @@ func sendLinkRequestResponse(state int, input interface{}, output interface{}, d
 	framingMode := packet.data[11]
 	maxOutstanding := packet.data[14]
 	dataPhaseOpt := packet.data[21]
-	if dataPhaseOpt & 0x1 == 0x1 {
+	if dataPhaseOpt&0x1 == 0x1 {
 		layer.maxInfoLength = 256
 	} else {
 		layer.maxInfoLength = 64
