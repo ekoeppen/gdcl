@@ -28,6 +28,9 @@ func dataHandler(receivedData <-chan protocol.DantePacket, sentData chan<- proto
 			log.Printf("%x\n", packet)
 		case command := <-commands:
 			log.Printf("Command: %d\n", command)
+			if command == 'd' {
+				sentData <- *protocol.DantePacketNew(protocol.APP_DISCONNECT, make([]byte, 0))
+			}
 		}
 	}
 }
