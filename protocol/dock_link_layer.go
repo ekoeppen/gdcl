@@ -163,7 +163,7 @@ type DantePacketCommand struct {
 }
 
 type DantePacketHandler interface {
-	handlePacket(packet *DantePacket)
+	FromDockLink() chan DantePacket
 }
 
 type DockLinkLayer struct {
@@ -171,7 +171,7 @@ type DockLinkLayer struct {
 	ToMNPConnection   chan []byte
 	FromApplication   chan DantePacket
 	ToApplication     chan DantePacket
-	modules           []DantePacketHandler
+	modules           []chan DantePacket
 }
 
 type DantePacket struct {
@@ -230,7 +230,9 @@ func (layer *DockLinkLayer) reader() {
 			dantePacket := DantePacketFromBinary(packet)
 			log.Printf("%s %x\n%s", FourCCAsString(dantePacket.command), dantePacket.length, hex.Dump(dantePacket.data))
 			for i := 0; i < len(layer.modules); i++ {
-				layer.modules[i].handlePacket(dantePacket)
+				go func(channel chan DantePacket) {
+					channel <- *dantePacket
+				}(layer.modules[i])
 			}
 		}
 	}()
@@ -244,15 +246,15 @@ func (layer *DockLinkLayer) writer() {
 				layer.ToMNPConnection <- packet.ToBinary()
 			} else {
 				for i := 0; i < len(layer.modules); i++ {
-					layer.modules[i].handlePacket(&packet)
+					layer.modules[i] <- packet
 				}
 			}
 		}
 	}()
 }
 
-func (layer *DockLinkLayer) AddModule(module DantePacketHandler) {
-	layer.modules = append(layer.modules, module)
+func (layer *DockLinkLayer) AddModule(channel chan DantePacket) {
+	layer.modules = append(layer.modules, channel)
 }
 
 func DockLinkLayerNew(fromMNPConnection chan []byte, toMNPConnection chan []byte) *DockLinkLayer {

@@ -53,6 +53,7 @@ type ConnectModule struct {
 	newtonChallenge uint64
 	newtonPassword  uint64
 	ToDockLink      chan DantePacket
+	FromDockLink    chan DantePacket
 }
 
 func requestToDock(state int, input interface{}, output interface{}, data interface{}) {
@@ -114,13 +115,19 @@ func password(state int, input interface{}, output interface{}, data interface{}
 	module.ToDockLink <- *packet
 }
 
-func (module *ConnectModule) handlePacket(packet *DantePacket) {
-	module.state = fsm.Transition(module.stateTable, module.state, packet, nil, module)
+func (module *ConnectModule) reader() {
+	go func() {
+		for {
+			packet := <- module.FromDockLink
+			module.state = fsm.Transition(module.stateTable, module.state, &packet, nil, module)
+		}
+	}()
 }
 
 func ConnectModuleNew(toDockLink chan DantePacket, sessionType byte) *ConnectModule {
 	var module ConnectModule
 	module.ToDockLink = toDockLink
+	module.FromDockLink = make(chan DantePacket)
 	module.sessionType = sessionType
 	if module.sessionType == SESSION_NONE {
 		module.stateTable = map[int][]fsm.State{
@@ -142,5 +149,6 @@ func ConnectModuleNew(toDockLink chan DantePacket, sessionType byte) *ConnectMod
 			CONN_UP:          {{Input: DantePacketCommand{DISCONNECT}, NewState: CONN_IDLE}},
 		}
 	}
+	module.reader()
 	return &module
 }

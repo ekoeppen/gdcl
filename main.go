@@ -1,12 +1,12 @@
 package main
 
 import (
+	"encoding/hex"
 	"gdcl/nsof"
 	"gdcl/protocol"
 	"io/ioutil"
-	"os"
 	"log"
-	"encoding/hex"
+	"os"
 )
 
 func nsofTest() {
@@ -57,16 +57,16 @@ func serialTest(session byte) {
 	connectionLayer := protocol.MNPConnectionLayerNew(packetLayer.ToConnection, packetLayer.FromConnection)
 	dockLinkLayer := protocol.DockLinkLayerNew(connectionLayer.ToDockLink, connectionLayer.FromDockLink)
 	connectModule := protocol.ConnectModuleNew(dockLinkLayer.FromApplication, session)
-	dockLinkLayer.AddModule(connectModule)
+	dockLinkLayer.AddModule(connectModule.FromDockLink)
 	if session == protocol.SESSION_LOAD_PACKAGE {
 		buf, _ := ioutil.ReadFile(os.Args[2])
 		loadPackageModule := protocol.LoadPackageModuleNew(dockLinkLayer.FromApplication, buf)
-		dockLinkLayer.AddModule(loadPackageModule)
+		dockLinkLayer.AddModule(loadPackageModule.FromDockLink)
 	}
 	dataHandler(dockLinkLayer.ToApplication, dockLinkLayer.FromApplication, commandChannel)
 }
 
 func main() {
 	//nsofTest()
-	serialTest(protocol.SESSION_LOAD_PACKAGE)
+	serialTest(protocol.SESSION_NONE)
 }
