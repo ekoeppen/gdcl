@@ -196,7 +196,7 @@ func MNPPacketLayerNew(name string, speed int) *MNPPacketLayer {
 	}
 	packetLayer.reader()
 	packetLayer.writer()
-	packetLayer.logging = true
+	packetLayer.logging = false
 	return &packetLayer
 }
 
