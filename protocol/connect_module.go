@@ -5,7 +5,6 @@ import (
 	"crypto/des"
 	"encoding/binary"
 	"gdcl/fsm"
-	"log"
 )
 
 const (
@@ -47,13 +46,10 @@ const (
 )
 
 type ConnectModule struct {
-	state           int
-	stateTable      map[int][]fsm.State
+	DockModule
 	sessionType     byte
 	newtonChallenge uint64
 	newtonPassword  uint64
-	ToDockLink      chan DantePacket
-	FromDockLink    chan DantePacket
 }
 
 func requestToDock(state int, input interface{}, output interface{}, data interface{}) {
@@ -88,7 +84,6 @@ func whichIcons(state int, input interface{}, output interface{}, data interface
 	newton_info := input.(*DantePacket)
 	buf := bytes.NewBuffer(newton_info.data[4:])
 	binary.Read(buf, binary.BigEndian, &module.newtonChallenge)
-	log.Printf("%08x", module.newtonChallenge)
 	packet := DantePacketNew(WHICH_ICONS, []byte{0, 0, 0, ALL_ICONS})
 	module.ToDockLink <- *packet
 }
@@ -115,23 +110,9 @@ func password(state int, input interface{}, output interface{}, data interface{}
 	module.ToDockLink <- *packet
 }
 
-func (module *ConnectModule) transition(packet DantePacket) {
-	module.state = fsm.Transition(module.stateTable, module.state, &packet, nil, module)
-}
-
-func (module *ConnectModule) reader() {
-	go func() {
-		for {
-			packet := <-module.FromDockLink
-			go module.transition(packet)
-		}
-	}()
-}
-
 func ConnectModuleNew(toDockLink chan DantePacket, sessionType byte) *ConnectModule {
 	var module ConnectModule
-	module.ToDockLink = toDockLink
-	module.FromDockLink = make(chan DantePacket)
+	module.DockModule.DockModuleInit(toDockLink, &module)
 	module.sessionType = sessionType
 	if module.sessionType == SESSION_NONE {
 		module.stateTable = map[int][]fsm.State{

@@ -10,11 +10,8 @@ const (
 )
 
 type LoadPackageModule struct {
-	state        int
-	stateTable   map[int][]fsm.State
+	DockModule
 	packageData  []byte
-	ToDockLink   chan DantePacket
-	FromDockLink chan DantePacket
 }
 
 func loadPackage(state int, input interface{}, output interface{}, data interface{}) {
@@ -29,23 +26,9 @@ func disconnect(state int, input interface{}, output interface{}, data interface
 	module.ToDockLink <- *packet
 }
 
-func (module *LoadPackageModule) transition(packet DantePacket) {
-	module.state = fsm.Transition(module.stateTable, module.state, &packet, nil, module)
-}
-
-func (module *LoadPackageModule) reader() {
-	go func() {
-		for {
-			packet := <-module.FromDockLink
-			go module.transition(packet)
-		}
-	}()
-}
-
 func LoadPackageModuleNew(toDockLink chan DantePacket, packageData []byte) *LoadPackageModule {
 	var module LoadPackageModule
-	module.ToDockLink = toDockLink
-	module.FromDockLink = make(chan DantePacket)
+	module.DockModule.DockModuleInit(toDockLink, &module)
 	module.packageData = packageData
 	module.stateTable = map[int][]fsm.State{
 		LOAD_PACKAGE_IDLE: {{Input: DantePacketCommand{RESULT}, NewState: LOAD_PACKAGE_UP, Action: loadPackage}},

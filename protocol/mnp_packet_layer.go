@@ -199,19 +199,3 @@ func MNPPacketLayerNew(name string, speed int) *MNPPacketLayer {
 	packetLayer.logging = false
 	return &packetLayer
 }
-
-/*
-func transitionTest() {
-	state := OUTSIDE_PACKET
-	packet := Packet{data: make([]byte, 0, 16), receivedCRC: 0, calculatedCRC: 0}
-	state = fsm.Transition(stateTable, state, SYN, &packet)
-	state = fsm.Transition(stateTable, state, DLE, &packet)
-	state = fsm.Transition(stateTable, state, STX, &packet)
-	state = fsm.Transition(stateTable, state, byte(6), &packet)
-	state = fsm.Transition(stateTable, state, byte(0), &packet)
-	state = fsm.Transition(stateTable, state, DLE, &packet)
-	state = fsm.Transition(stateTable, state, ETX, &packet)
-	state = fsm.Transition(stateTable, state, byte(0x1), &packet)
-	state = fsm.Transition(stateTable, state, byte(0x1), &packet)
-}
-*/

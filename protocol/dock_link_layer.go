@@ -3,9 +3,8 @@ package protocol
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/hex"
+	"gdcl/fsm"
 	"fmt"
-	"log"
 )
 
 const (
@@ -228,7 +227,6 @@ func (layer *DockLinkLayer) reader() {
 		for {
 			packet := <-layer.FromMNPConnection
 			dantePacket := DantePacketFromBinary(packet)
-			log.Printf("%s %x\n%s", FourCCAsString(dantePacket.command), dantePacket.length, hex.Dump(dantePacket.data))
 			for _, module := range layer.modules {
 				module <- *dantePacket
 			}
@@ -263,4 +261,31 @@ func DockLinkLayerNew(fromMNPConnection chan []byte, toMNPConnection chan []byte
 	dockLinkLayer.reader()
 	dockLinkLayer.writer()
 	return &dockLinkLayer
+}
+
+type DockModule struct {
+	state        int
+	stateTable   map[int][]fsm.State
+	ToDockLink   chan DantePacket
+	FromDockLink chan DantePacket
+	data         interface{}
+}
+
+func (module *DockModule) DockModuleInit(toDockLink chan DantePacket, data interface{}) {
+	module.ToDockLink = toDockLink
+	module.FromDockLink = make(chan DantePacket)
+	module.data = data
+}
+
+func (module *DockModule) transition(packet DantePacket) {
+	module.state = fsm.Transition(module.stateTable, module.state, &packet, nil, module.data)
+}
+
+func (module *DockModule) reader() {
+	go func() {
+		for {
+			packet := <-module.FromDockLink
+			go module.transition(packet)
+		}
+	}()
 }
