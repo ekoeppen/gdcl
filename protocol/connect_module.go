@@ -122,7 +122,7 @@ func (module *ConnectModule) transition(packet DantePacket) {
 func (module *ConnectModule) reader() {
 	go func() {
 		for {
-			packet := <- module.FromDockLink
+			packet := <-module.FromDockLink
 			go module.transition(packet)
 		}
 	}()
