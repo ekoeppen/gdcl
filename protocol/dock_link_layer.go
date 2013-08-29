@@ -229,10 +229,8 @@ func (layer *DockLinkLayer) reader() {
 			packet := <-layer.FromMNPConnection
 			dantePacket := DantePacketFromBinary(packet)
 			log.Printf("%s %x\n%s", FourCCAsString(dantePacket.command), dantePacket.length, hex.Dump(dantePacket.data))
-			for i := 0; i < len(layer.modules); i++ {
-				go func(channel chan DantePacket) {
-					channel <- *dantePacket
-				}(layer.modules[i])
+			for _, module := range layer.modules {
+				module <- *dantePacket
 			}
 		}
 	}()

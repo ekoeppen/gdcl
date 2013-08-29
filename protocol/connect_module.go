@@ -115,11 +115,15 @@ func password(state int, input interface{}, output interface{}, data interface{}
 	module.ToDockLink <- *packet
 }
 
+func (module *ConnectModule) transition(packet DantePacket) {
+	module.state = fsm.Transition(module.stateTable, module.state, &packet, nil, module)
+}
+
 func (module *ConnectModule) reader() {
 	go func() {
 		for {
 			packet := <- module.FromDockLink
-			module.state = fsm.Transition(module.stateTable, module.state, &packet, nil, module)
+			go module.transition(packet)
 		}
 	}()
 }

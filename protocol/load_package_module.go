@@ -29,11 +29,15 @@ func disconnect(state int, input interface{}, output interface{}, data interface
 	module.ToDockLink <- *packet
 }
 
+func (module *LoadPackageModule) transition(packet DantePacket) {
+	module.state = fsm.Transition(module.stateTable, module.state, &packet, nil, module)
+}
+
 func (module *LoadPackageModule) reader() {
 	go func() {
 		for {
 			packet := <-module.FromDockLink
-			module.state = fsm.Transition(module.stateTable, module.state, &packet, nil, module)
+			go module.transition(packet)
 		}
 	}()
 }
