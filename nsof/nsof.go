@@ -493,7 +493,7 @@ func (smallRect *SmallRect) ReadNSOF(data *Data, objectStream *ObjectStream) Obj
 }
 
 func (smallRect *SmallRect) WriteNSOF(data *Data) {
-	*data = append(*data, ARRAY, smallRect.top, smallRect.left, smallRect.bottom, smallRect.right)
+	*data = append(*data, SMALLRECT, smallRect.top, smallRect.left, smallRect.bottom, smallRect.right)
 }
 
 func (smallRect *SmallRect) String() string {
