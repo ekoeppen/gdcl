@@ -51,7 +51,7 @@ func (data *Data) DecodeXLong() int32 {
 
 func (data *Data) EncodeXLong(value int32) {
 	nsof := *data
-	if value < 255 {
+	if value < 255 && value >= 0 {
 		nsof = append(nsof, byte(value))
 	} else {
 		nsof = append(nsof, 255, byte(value>>24), byte(value>>16), byte(value>>8), byte(value))
