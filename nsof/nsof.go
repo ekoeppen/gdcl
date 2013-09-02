@@ -355,7 +355,7 @@ func NewPrecedent() *Precedent {
 }
 
 type String struct {
-	value string
+	value []rune
 }
 
 func (str *String) ReadNSOF(data *Data, objectStream *ObjectStream) Object {
@@ -366,7 +366,7 @@ func (str *String) ReadNSOF(data *Data, objectStream *ObjectStream) Object {
 	for i = 0; i < length/2; i++ {
 		chars[i] = uint16((*data)[i*2])*256 + uint16((*data)[i*2+1])
 	}
-	str.value = string(utf16.Decode(chars))
+	str.value = utf16.Decode(chars)
 	*data = (*data)[length:]
 	return str
 }
@@ -374,13 +374,14 @@ func (str *String) ReadNSOF(data *Data, objectStream *ObjectStream) Object {
 func (str *String) WriteNSOF(data *Data) {
 	*data = append(*data, STRING)
 	data.EncodeXLong(int32(len(str.value) * 2))
-	for i := 0; i < len(str.value); i++ {
-		*data = append(*data, 0, str.value[i])
+	s := utf16.Encode(str.value)
+	for i := 0; i < len(s); i++ {
+		*data = append(*data, byte(s[i]>>8), byte(s[i]))
 	}
 }
 
 func (str *String) String() string {
-	return str.value
+	return string(str.value)
 }
 
 func NewString() *String {
