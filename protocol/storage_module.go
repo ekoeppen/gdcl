@@ -2,6 +2,7 @@ package protocol
 
 import (
 	"gdcl/fsm"
+	"log"
 )
 
 const (
@@ -21,6 +22,7 @@ func getDefaultStore(state int, input interface{}, output interface{}, data inte
 
 func gotDefaultStore(state int, input interface{}, output interface{}, data interface{}) {
 	// module := data.(*StorageModule)
+	log.Printf("Got default store\n")
 }
 
 func StorageModuleNew(toDockLink chan DantePacket) *StorageModule {

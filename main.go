@@ -28,8 +28,9 @@ func dataHandler(receivedData <-chan protocol.DantePacket, sentData chan<- proto
 			log.Printf("%x\n", packet)
 		case command := <-commands:
 			log.Printf("Command: %d\n", command)
-			if command == 'd' {
-				sentData <- *protocol.DantePacketNew(protocol.APP_DISCONNECT, make([]byte, 0))
+			switch command {
+				case 'd': sentData <- *protocol.DantePacketNew(protocol.APP_DISCONNECT, make([]byte, 0))
+				case 's': sentData <- *protocol.DantePacketNew(protocol.APP_GET_DEFAULT_STORE, make([]byte, 0))
 			}
 		}
 	}
@@ -57,7 +58,9 @@ func serialTest(session byte) {
 	connectionLayer := protocol.MNPConnectionLayerNew(packetLayer.ToConnection, packetLayer.FromConnection)
 	dockLinkLayer := protocol.DockLinkLayerNew(connectionLayer.ToDockLink, connectionLayer.FromDockLink)
 	connectModule := protocol.ConnectModuleNew(dockLinkLayer.FromApplication, session)
+	storageModule := protocol.StorageModuleNew(dockLinkLayer.FromApplication)
 	dockLinkLayer.AddModule(connectModule.FromDockLink)
+	dockLinkLayer.AddModule(storageModule.FromDockLink)
 	if session == protocol.SESSION_LOAD_PACKAGE {
 		buf, _ := ioutil.ReadFile(os.Args[2])
 		loadPackageModule := protocol.LoadPackageModuleNew(dockLinkLayer.FromApplication, buf)
@@ -67,6 +70,6 @@ func serialTest(session byte) {
 }
 
 func main() {
-	nsofTest()
-	//serialTest(protocol.SESSION_NONE)
+	//nsofTest()
+	serialTest(protocol.SESSION_NONE)
 }
