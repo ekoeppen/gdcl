@@ -11,6 +11,7 @@ const (
 	APP_DATA                     = 0x00000001
 	APP_QUIT                     = 0x00000002
 	APP_DISCONNECT               = 0x00000003
+	APP_GET_DEFAULT_STORE        = 0x00000004
 	LAST_APP_COMMAND             = 0x32323232
 	NEWT                         = 0x6e657774
 	DOCK                         = 0x646f636b
