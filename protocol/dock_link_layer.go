@@ -13,6 +13,7 @@ const (
 	APP_DISCONNECT               = 0x00000003
 	APP_GET_DEFAULT_STORE        = 0x00000004
 	APP_GET_STORE_NAMES          = 0x00000005
+	APP_QUERY_SOUP               = 0x00000006
 	LAST_APP_COMMAND             = 0x32323232
 	NEWT                         = 0x6e657774
 	DOCK                         = 0x646f636b
