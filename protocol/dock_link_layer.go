@@ -3,8 +3,8 @@ package protocol
 import (
 	"bytes"
 	"encoding/binary"
-	"gdcl/fsm"
 	"fmt"
+	"gdcl/fsm"
 )
 
 const (
@@ -14,6 +14,15 @@ const (
 	APP_GET_DEFAULT_STORE        = 0x00000004
 	APP_GET_STORE_NAMES          = 0x00000005
 	APP_QUERY_SOUP               = 0x00000006
+	APP_CURSOR_FREE              = 0x00000007
+	APP_CURSOR_NEXT              = 0x00000008
+	APP_CURSOR_ENTRY             = 0x00000009
+	APP_SET_CURRENT_STORE        = 0x0000000a
+	APP_SET_CURRENT_SOUP         = 0x0000000b
+	APP_GET_SOUP_NAMES           = 0x0000000c
+	APP_DELETE_ENTRIES           = 0x0000000d
+	APP_ADD_ENTRY                = 0x0000000e
+	APP_SEND_SOUP                = 0x0000000f
 	LAST_APP_COMMAND             = 0x32323232
 	NEWT                         = 0x6e657774
 	DOCK                         = 0x646f636b
