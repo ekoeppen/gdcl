@@ -2,8 +2,8 @@ package protocol
 
 import (
 	"encoding/hex"
-	"gdcl/crc16"
-	"gdcl/fsm"
+	"github.com/ekoeppen/gdcl/v2/crc16"
+	"github.com/ekoeppen/gdcl/v2/fsm"
 	"github.com/tarm/goserial"
 	"io"
 	"log"
@@ -137,7 +137,7 @@ func (layer *MNPPacketLayer) reader() {
 func (layer *MNPPacketLayer) writer() {
 	go func() {
 		for {
-			buf := <- layer.FromConnection
+			buf := <-layer.FromConnection
 			outBuf := make([]byte, 0, len(buf)*2+7)
 			crc := uint16(0)
 			outBuf = append(outBuf, SYN, DLE, STX)

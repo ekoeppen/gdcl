@@ -1,7 +1,7 @@
 package protocol
 
 import (
-	"gdcl/fsm"
+	"github.com/ekoeppen/gdcl/v2/fsm"
 )
 
 const (
@@ -11,7 +11,7 @@ const (
 
 type LoadPackageModule struct {
 	DockModule
-	packageData  []byte
+	packageData []byte
 }
 
 func loadPackage(state int, input interface{}, output interface{}, data interface{}) {

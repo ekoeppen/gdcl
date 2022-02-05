@@ -1,7 +1,7 @@
 package protocol
 
 import (
-	"gdcl/fsm"
+	"github.com/ekoeppen/gdcl/v2/fsm"
 	"log"
 )
 
@@ -53,14 +53,14 @@ func StorageModuleNew(toDockLink chan DantePacket) *StorageModule {
 	var module StorageModule
 	module.DockModule.DockModuleInit(toDockLink, &module)
 	module.stateTable = map[int][]fsm.State{
-		STORAGE_IDLE:          		{
+		STORAGE_IDLE: {
 			{Input: DantePacketCommand{APP_GET_DEFAULT_STORE}, NewState: STORAGE_GET_DEFAULT_STORE, Action: getDefaultStore},
 			{Input: DantePacketCommand{APP_GET_STORE_NAMES}, NewState: STORAGE_GET_STORE_NAMES, Action: getStoreNames},
 			{Input: DantePacketCommand{APP_QUERY_SOUP}, NewState: STORAGE_QUERY_SOUP, Action: querySoup},
 		},
-		STORAGE_GET_DEFAULT_STORE:	{{Input: DantePacketCommand{DEFAULT_STORE}, NewState: STORAGE_IDLE, Action: gotDefaultStore}},
-		STORAGE_GET_STORE_NAMES:	{{Input: DantePacketCommand{STORE_NAMES}, NewState: STORAGE_IDLE, Action: gotStoreNames}},
-		STORAGE_QUERY_SOUP:		{
+		STORAGE_GET_DEFAULT_STORE: {{Input: DantePacketCommand{DEFAULT_STORE}, NewState: STORAGE_IDLE, Action: gotDefaultStore}},
+		STORAGE_GET_STORE_NAMES:   {{Input: DantePacketCommand{STORE_NAMES}, NewState: STORAGE_IDLE, Action: gotStoreNames}},
+		STORAGE_QUERY_SOUP: {
 			{Input: DantePacketCommand{RESULT}, NewState: STORAGE_IDLE, Action: setCursorId},
 			{Input: DantePacketCommand{LONGDATA}, NewState: STORAGE_IDLE, Action: setCursorId},
 		},
@@ -68,4 +68,3 @@ func StorageModuleNew(toDockLink chan DantePacket) *StorageModule {
 	module.reader()
 	return &module
 }
-

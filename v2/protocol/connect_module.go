@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"crypto/des"
 	"encoding/binary"
-	"gdcl/fsm"
+	"github.com/ekoeppen/gdcl/v2/fsm"
 )
 
 const (

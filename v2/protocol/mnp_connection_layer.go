@@ -2,7 +2,7 @@ package protocol
 
 import (
 	"fmt"
-	"gdcl/fsm"
+	"github.com/ekoeppen/gdcl/v2/fsm"
 	"os"
 	"time"
 )
@@ -91,7 +91,8 @@ func handleLinkAcknowledgement(state int, input interface{}, output interface{},
 	} else {
 		layer.receiveCreditStateVariable = 0
 	}
-	layer.ackChannel <- AckInfo{layer.receiveCreditStateVariable, receiveStateVariable, layer.lastAckSequenceNumber}
+	layer.ackChannel <- AckInfo{layer.receiveCreditStateVariable, receiveStateVariable,
+		layer.lastAckSequenceNumber}
 	layer.lastAckSequenceNumber = receiveStateVariable
 }
 
@@ -172,7 +173,8 @@ func (layer *MNPConnectionLayer) writeQueueHandler() {
 			if layer.receiveCreditStateVariable > 0 {
 				select {
 				case buf := <-layer.writeQueue:
-					layer.outstandingPackets = append(layer.outstandingPackets, OutstandingPacket{buf, buf[2]})
+					layer.outstandingPackets = append(layer.outstandingPackets,
+						OutstandingPacket{buf, buf[2]})
 					layer.ToPacketLayer <- buf
 					layer.receiveCreditStateVariable--
 				case ack := <-layer.ackChannel:

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"gdcl/fsm"
+	"github.com/ekoeppen/gdcl/v2/fsm"
 )
 
 const (
@@ -178,11 +178,11 @@ type DantePacketHandler interface {
 }
 
 type DockLinkLayer struct {
-	FromMNPConnection chan []byte
-	ToMNPConnection   chan []byte
-	FromApplication   chan DantePacket
-	ToApplication     chan DantePacket
-	modules           []chan DantePacket
+	FromConnection  chan []byte
+	ToMNPConnection chan []byte
+	FromApplication chan DantePacket
+	ToApplication   chan DantePacket
+	modules         []chan DantePacket
 }
 
 type DantePacket struct {
@@ -237,7 +237,7 @@ var dockLinkLayer DockLinkLayer
 func (layer *DockLinkLayer) reader() {
 	go func() {
 		for {
-			packet := <-layer.FromMNPConnection
+			packet := <-layer.FromConnection
 			dantePacket := DantePacketFromBinary(packet)
 			for _, module := range layer.modules {
 				module <- *dantePacket
@@ -266,7 +266,7 @@ func (layer *DockLinkLayer) AddModule(channel chan DantePacket) {
 }
 
 func DockLinkLayerNew(fromMNPConnection chan []byte, toMNPConnection chan []byte) *DockLinkLayer {
-	dockLinkLayer.FromMNPConnection = fromMNPConnection
+	dockLinkLayer.FromConnection = fromMNPConnection
 	dockLinkLayer.ToMNPConnection = toMNPConnection
 	dockLinkLayer.FromApplication = make(chan DantePacket)
 	dockLinkLayer.ToApplication = make(chan DantePacket)
