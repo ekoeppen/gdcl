@@ -53,6 +53,7 @@ func Process(event protocol.Event) {
 	case *protocol.SerialEvent:
 		if event.(*protocol.SerialEvent).Direction == protocol.Out {
 			fd.Write(event.(*protocol.SerialEvent).Data)
+			fd.Drain()
 		}
 	}
 }

@@ -1,7 +1,8 @@
 package mnp
 
 import (
-	"fmt"
+	"bytes"
+	"encoding/binary"
 	"gitlab.com/40hz/newton/gdcl/v3/fsm"
 	"gitlab.com/40hz/newton/gdcl/v3/protocol"
 )
@@ -39,7 +40,7 @@ type outstandingPacket struct {
 
 var (
 	state                      int = idle
-	maxInfoLength              uint16
+	maxInfoLength              int
 	lastAckSequenceNumber      byte
 	outstandingPackets         []outstandingPacket
 	maxOutstanding             byte
@@ -63,11 +64,8 @@ var transitions = []fsm.Transition[int, byte, int]{
 
 func processIn(event *protocol.MnpEvent) {
 	var action int
-	fmt.Printf("Processing MNP packet: %d\n", len(event.Data))
 	var packetType = event.Data[1]
-	fmt.Printf("%02x %d -> ", packetType, state)
 	action, state = fsm.Input(packetType, state, transitions)
-	fmt.Printf("%d %d\n", action, state)
 	switch action {
 	case sendLinkRequestResponse:
 		framingMode := event.Data[13]
@@ -76,13 +74,13 @@ func processIn(event *protocol.MnpEvent) {
 		if dataPhaseOpt&0x1 == 0x1 {
 			maxInfoLength = 256
 		} else {
-			maxInfoLength = 64
+			maxInfoLength = int(event.Data[19])*256 + int(event.Data[20])
 		}
 		buf := []byte{23, lr, 2,
 			1, 6, 1, 0, 0, 0, 0, 255,
 			2, 1, framingMode,
 			3, 1, maxOutstanding,
-			4, 2, 64, 0,
+			4, 2, event.Data[19], event.Data[20],
 			8, 1, dataPhaseOpt}
 		outstandingPackets = make([]outstandingPacket, 0, maxOutstanding)
 		protocol.Events <- &protocol.MnpEvent{
@@ -114,6 +112,24 @@ func processIn(event *protocol.MnpEvent) {
 }
 
 func processOut(event *protocol.DockEvent) {
+	var eventData = event.Data
+	for len(eventData) > 0 {
+		sendStateVariable++
+		buf := new(bytes.Buffer)
+		binary.Write(buf, binary.BigEndian, byte(2))
+		binary.Write(buf, binary.BigEndian, byte(lt))
+		binary.Write(buf, binary.BigEndian, byte(sendStateVariable))
+		n := len(eventData)
+		if n > int(maxInfoLength) {
+			n = int(maxInfoLength)
+		}
+		buf.Write(eventData[:n])
+		eventData = eventData[n:]
+		protocol.Events <- &protocol.MnpEvent{
+			Direction: protocol.Out,
+			Data:      buf.Bytes(),
+		}
+	}
 }
 
 func Process(event protocol.Event) {

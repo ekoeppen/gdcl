@@ -2,8 +2,8 @@ package protocol
 
 import (
 	"bytes"
-	"encoding/hex"
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 )
 
@@ -196,7 +196,8 @@ type DockEvent struct {
 var Events = make(chan Event, 100)
 
 func (event SerialEvent) String() string {
-	return fmt.Sprintf("Serial (%d):\n%s", event.Direction, hex.Dump(event.Data))
+	// return fmt.Sprintf("Serial (%d):\n%s", event.Direction, hex.Dump(event.Data))
+	return fmt.Sprintf("Serial (%d)", event.Direction)
 }
 
 func (event MnpEvent) String() string {
@@ -214,9 +215,13 @@ func NewDockEvent(cmd uint32, direction byte, data []byte) *DockEvent {
 	binary.Write(&buf, binary.BigEndian, cmd)
 	binary.Write(&buf, binary.BigEndian, uint32(len(data)))
 	buf.Write(data)
+	if len(data)%4 != 0 {
+		pad := 4 - len(data)%4
+		buf.Write(make([]byte, pad, pad))
+	}
 	return &DockEvent{
 		Direction: direction,
-		Data: buf.Bytes(),
+		Data:      buf.Bytes(),
 	}
 }
 
@@ -227,4 +232,3 @@ func IsQuitEvent(event Event) bool {
 	}
 	return false
 }
-
