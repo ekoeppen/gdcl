@@ -30,6 +30,8 @@ const (
 	APP_DELETE_ENTRIES           = 0x0000000d
 	APP_ADD_ENTRY                = 0x0000000e
 	APP_SEND_SOUP                = 0x0000000f
+	APP_GET_INFO                 = 0x00000010
+	APP_CONNECTED                = 0x00000011
 	LAST_APP_COMMAND             = 0x32323232
 	NEWT                         = 0x6e657774
 	DOCK                         = 0x646f636b
@@ -83,7 +85,7 @@ const (
 	SET_VBO_COMPRESSION          = 0x6376626f
 	RESTORE_PATCH                = 0x72706174
 	OPERATION_DONE               = 0x6f70646e
-	OPERATION_CANCELED           = 0x6f70636e
+	OPERATION_CANCELED           = 0x6f706361
 	OP_CANCELED_ACK              = 0x6f636161
 	REF_TEST                     = 0x72747374
 	UNKNOWN_COMMAND              = 0x756e6b6e
@@ -196,8 +198,7 @@ type DockEvent struct {
 var Events = make(chan Event, 100)
 
 func (event SerialEvent) String() string {
-	// return fmt.Sprintf("Serial (%d):\n%s", event.Direction, hex.Dump(event.Data))
-	return fmt.Sprintf("Serial (%d)", event.Direction)
+	return fmt.Sprintf("Serial (%d):\n%s", event.Direction, hex.Dump(event.Data))
 }
 
 func (event MnpEvent) String() string {

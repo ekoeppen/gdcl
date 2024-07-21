@@ -36,6 +36,7 @@ const (
 	sendWhichIcons
 	sendPassword
 	sendTimeout
+	passwordError
 	connected
 )
 
