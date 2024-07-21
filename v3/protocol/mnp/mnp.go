@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"gitlab.com/40hz/newton/gdcl/v3/fsm"
 	"gitlab.com/40hz/newton/gdcl/v3/protocol"
+	"log"
 )
 
 const (
@@ -48,6 +49,8 @@ var (
 	receiveCreditStateVariable byte
 	sendStateVariable          byte
 	receiveStateVariable       byte
+	dockPacket                 protocol.DockEvent
+	dockPacketStarted          bool
 )
 
 var transitions = []fsm.Transition[int, byte, int]{
@@ -102,9 +105,20 @@ func processIn(event *protocol.MnpEvent) {
 			Direction: protocol.Out,
 			Data:      []byte{3, la, receiveStateVariable, 8},
 		}
-		protocol.Events <- &protocol.DockEvent{
-			Direction: protocol.In,
-			Data:      event.Data[3:],
+		if !dockPacketStarted {
+			buf := bytes.NewBuffer(event.Data[11:])
+			binary.Read(buf, binary.BigEndian, &dockPacket.Command)
+			binary.Read(buf, binary.BigEndian, &dockPacket.Length)
+			dockPacket.Data = event.Data[19:]
+			dockPacket.Direction = protocol.In
+			dockPacketStarted = true
+		} else {
+			dockPacket.Data = append(dockPacket.Data, event.Data[3:]...)
+		}
+		log.Println(dockPacket)
+		if uint32(len(dockPacket.Data)) >= dockPacket.Length {
+			dockPacketStarted = false
+			protocol.Events <- &dockPacket
 		}
 	case closeConnection:
 		protocol.Events <- protocol.NewDockEvent(protocol.APP_QUIT, protocol.In, []byte{})
@@ -112,7 +126,13 @@ func processIn(event *protocol.MnpEvent) {
 }
 
 func processOut(event *protocol.DockEvent) {
-	var eventData = event.Data
+	eventDataBuf := new(bytes.Buffer)
+	binary.Write(eventDataBuf, binary.BigEndian, uint32(protocol.NEWT))
+	binary.Write(eventDataBuf, binary.BigEndian, uint32(protocol.DOCK))
+	binary.Write(eventDataBuf, binary.BigEndian, event.Command)
+	binary.Write(eventDataBuf, binary.BigEndian, uint32(event.Length))
+	eventDataBuf.Write(event.Data)
+	eventData := eventDataBuf.Bytes()
 	for len(eventData) > 0 {
 		sendStateVariable++
 		buf := new(bytes.Buffer)

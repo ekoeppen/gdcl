@@ -66,10 +66,10 @@ var transitions = []fsm.Transition[int, uint32, int]{
 	{State: sentDesktopInfo, Fallback: true, NewState: sentDesktopInfo},
 	{State: sentWhichIcons, Event: protocol.RESULT, Action: sendTimeout, NewState: sentTimeout},
 	{State: sentWhichIcons, Fallback: true, NewState: sentWhichIcons},
-	{State: sentTimeout, Event: protocol.PASSWORD, Action: sendPassword, NewState: up},
+	{State: sentTimeout, Event: protocol.PASSWORD, Action: sendPassword, NewState: sentPassword},
 	{State: sentTimeout, Fallback: true, NewState: sentTimeout},
-	{State: sentPassword, Event: protocol.RESULT, Action: connected, NewState: up},
-	{State: sentPassword, Fallback: true, NewState: sentPassword},
+	{State: sentPassword, Event: protocol.HELLO, Action: connected, NewState: up},
+	{State: sentPassword, Event: protocol.RESULT, Action: passwordError, NewState: idle},
 	{State: up, Fallback: true, NewState: up},
 }
 
@@ -79,10 +79,6 @@ var (
 )
 
 func processIn(event *protocol.DockEvent) {
-	buf := bytes.NewBuffer(event.Data[8:])
-	binary.Read(buf, binary.BigEndian, &event.Command)
-	binary.Read(buf, binary.BigEndian, &event.Length)
-	event.Data = event.Data[16 : 16+event.Length]
 	if event.Command == protocol.NEWTON_INFO {
 		buf := bytes.NewBuffer(event.Data[4:])
 		binary.Read(buf, binary.BigEndian, &newtonChallenge)
@@ -138,7 +134,11 @@ func processIn(event *protocol.DockEvent) {
 			buf.Bytes(),
 		)
 	case connected:
-		break
+		protocol.Events <- protocol.NewDockEvent(
+			protocol.APP_CONNECTED,
+			protocol.In,
+			[]byte{},
+		)
 	}
 }
 

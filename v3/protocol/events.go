@@ -2,7 +2,6 @@ package protocol
 
 import (
 	"bytes"
-	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 )
@@ -206,15 +205,13 @@ func (event MnpEvent) String() string {
 }
 
 func (event DockEvent) String() string {
-	return fmt.Sprintf("Dock (%d): %08x\n%s", event.Direction, event.Command, hex.Dump(event.Data))
+	return fmt.Sprintf("Dock (%d): %08x %d\n%s",
+		event.Direction, event.Command, event.Length,
+		hex.Dump(event.Data))
 }
 
 func NewDockEvent(cmd uint32, direction byte, data []byte) *DockEvent {
 	var buf bytes.Buffer
-	binary.Write(&buf, binary.BigEndian, uint32(NEWT))
-	binary.Write(&buf, binary.BigEndian, uint32(DOCK))
-	binary.Write(&buf, binary.BigEndian, cmd)
-	binary.Write(&buf, binary.BigEndian, uint32(len(data)))
 	buf.Write(data)
 	if len(data)%4 != 0 {
 		pad := 4 - len(data)%4
@@ -222,7 +219,9 @@ func NewDockEvent(cmd uint32, direction byte, data []byte) *DockEvent {
 	}
 	return &DockEvent{
 		Direction: direction,
+		Command:   cmd,
 		Data:      buf.Bytes(),
+		Length:    uint32(len(data)),
 	}
 }
 
