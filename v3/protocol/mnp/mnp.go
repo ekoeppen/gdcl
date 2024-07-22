@@ -116,6 +116,7 @@ func processIn(event *protocol.MnpEvent) {
 		}
 		if uint32(len(dockPacket.Data)) >= dockPacket.Length {
 			dockPacketStarted = false
+			dockPacket.Data = dockPacket.Data[:dockPacket.Length]
 			protocol.Events <- &dockPacket
 		}
 	case closeConnection:
