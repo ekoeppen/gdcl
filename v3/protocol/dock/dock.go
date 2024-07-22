@@ -57,7 +57,7 @@ const (
 	allIcons     byte = 63
 )
 
-var transitions = []fsm.Transition[int, uint32, int]{
+var transitions = []fsm.Transition[int, protocol.Command, int]{
 	{State: idle, Event: protocol.REQUEST_TO_DOCK, Action: initiateDocking, NewState: initiating},
 	{State: idle, Fallback: true, NewState: idle},
 	{State: initiating, Event: protocol.NEWTON_NAME, Action: sendDesktopInfo, NewState: sentDesktopInfo},

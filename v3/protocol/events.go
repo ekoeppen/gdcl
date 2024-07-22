@@ -6,31 +6,34 @@ import (
 	"fmt"
 )
 
+type Direction byte
+type Command uint32
+
 const (
-	In byte = iota
+	In Direction = iota
 	Out
 )
 
 type Event interface{}
 
 const (
-	APP_DATA                     = 0x00000001
-	APP_QUIT                     = 0x00000002
-	APP_DISCONNECT               = 0x00000003
-	APP_GET_DEFAULT_STORE        = 0x00000004
-	APP_GET_STORE_NAMES          = 0x00000005
-	APP_QUERY_SOUP               = 0x00000006
-	APP_CURSOR_FREE              = 0x00000007
-	APP_CURSOR_NEXT              = 0x00000008
-	APP_CURSOR_ENTRY             = 0x00000009
-	APP_SET_CURRENT_STORE        = 0x0000000a
-	APP_SET_CURRENT_SOUP         = 0x0000000b
-	APP_GET_SOUP_NAMES           = 0x0000000c
-	APP_DELETE_ENTRIES           = 0x0000000d
-	APP_ADD_ENTRY                = 0x0000000e
-	APP_SEND_SOUP                = 0x0000000f
-	APP_GET_INFO                 = 0x00000010
-	APP_CONNECTED                = 0x00000011
+	APP_DATA                     = 0x30303030
+	APP_QUIT                     = 0x30303031
+	APP_DISCONNECT               = 0x30303032
+	APP_GET_DEFAULT_STORE        = 0x30303033
+	APP_GET_STORE_NAMES          = 0x30303034
+	APP_QUERY_SOUP               = 0x30303035
+	APP_CURSOR_FREE              = 0x30303036
+	APP_CURSOR_NEXT              = 0x30303037
+	APP_CURSOR_ENTRY             = 0x30303038
+	APP_SET_CURRENT_STORE        = 0x30303039
+	APP_SET_CURRENT_SOUP         = 0x30303061
+	APP_GET_SOUP_NAMES           = 0x30303032
+	APP_DELETE_ENTRIES           = 0x30303033
+	APP_ADD_ENTRY                = 0x30303034
+	APP_SEND_SOUP                = 0x30303035
+	APP_GET_INFO                 = 0x30303130
+	APP_CONNECTED                = 0x30303131
 	LAST_APP_COMMAND             = 0x32323232
 	NEWT                         = 0x6e657774
 	DOCK                         = 0x646f636b
@@ -178,39 +181,54 @@ const (
 )
 
 type SerialEvent struct {
-	Direction byte
+	Direction Direction
 	Data      []byte
 }
 
 type MnpEvent struct {
-	Direction byte
+	Direction Direction
 	Data      []byte
 }
 
 type DockEvent struct {
-	Direction byte
+	Direction Direction
 	Data      []byte
-	Command   uint32
+	Command   Command
 	Length    uint32
 }
 
 var Events = make(chan Event, 100)
 
+func (direction Direction) String() string {
+	if direction == In {
+		return "in"
+	}
+	return "out"
+}
+
+func (command Command) String() string {
+	return fmt.Sprintf("%c%c%c%c",
+		byte(command>>24),
+		byte(command>>16),
+		byte(command>>8),
+		byte(command))
+}
+
 func (event SerialEvent) String() string {
-	return fmt.Sprintf("Serial (%d):\n%s", event.Direction, hex.Dump(event.Data))
+	return fmt.Sprintf("Serial (%s):\n%s", event.Direction, hex.Dump(event.Data))
 }
 
 func (event MnpEvent) String() string {
-	return fmt.Sprintf("MNP (%d):\n%s", event.Direction, hex.Dump(event.Data))
+	return fmt.Sprintf("MNP (%s):\n%s", event.Direction, hex.Dump(event.Data))
 }
 
 func (event DockEvent) String() string {
-	return fmt.Sprintf("Dock (%d): %08x %d\n%s",
+	return fmt.Sprintf("Dock (%s): %s %d\n%s",
 		event.Direction, event.Command, event.Length,
 		hex.Dump(event.Data))
 }
 
-func NewDockEvent(cmd uint32, direction byte, data []byte) *DockEvent {
+func NewDockEvent(cmd Command, direction Direction, data []byte) *DockEvent {
 	var buf bytes.Buffer
 	buf.Write(data)
 	if len(data)%4 != 0 {

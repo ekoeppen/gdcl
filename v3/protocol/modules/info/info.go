@@ -1,7 +1,6 @@
 package info
 
 import (
-	_ "log"
 	"gitlab.com/40hz/newton/gdcl/v3/fsm"
 	"gitlab.com/40hz/newton/gdcl/v3/nsof"
 	"gitlab.com/40hz/newton/gdcl/v3/protocol"
@@ -25,7 +24,7 @@ const (
 	cancel
 )
 
-var transitions = []fsm.Transition[int, uint32, int]{
+var transitions = []fsm.Transition[int, protocol.Command, int]{
 	{State: idle, Event: protocol.APP_CONNECTED, Action: getStoreNames, NewState: gettingStoreNames},
 	{State: idle, Fallback: true, NewState: idle},
 	{State: gettingStoreNames, Event: protocol.STORE_NAMES, Action: selectStore, NewState: selectingStore},
