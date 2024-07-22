@@ -4,6 +4,7 @@ import (
 	"gitlab.com/40hz/newton/gdcl/v3/fsm"
 	"gitlab.com/40hz/newton/gdcl/v3/nsof"
 	"gitlab.com/40hz/newton/gdcl/v3/protocol"
+	"log"
 )
 
 const (
@@ -66,15 +67,27 @@ func processIn(event *protocol.DockEvent) {
 			data,
 		)
 	case getSoupNames:
+		var eventData nsof.Data = event.Data
+		soups := eventData.Factory()
+		log.Println(soups)
 		protocol.Events <- protocol.NewDockEvent(
 			protocol.GET_SOUP_NAMES,
 			protocol.Out,
 			[]byte{},
 		)
 	case showSoupNames:
-		break
+		protocol.Events <- protocol.NewDockEvent(
+			protocol.GET_APP_NAMES,
+			protocol.Out,
+			[]byte{0, 0, 0, 0},
+		)
+		state = gettingAppList
 	case showAppList:
-		break
+		protocol.Events <- protocol.NewDockEvent(
+			protocol.OPERATION_DONE,
+			protocol.Out,
+			[]byte{},
+		)
 	case cancel:
 		protocol.Events <- protocol.NewDockEvent(
 			protocol.OP_CANCELED_ACK,
