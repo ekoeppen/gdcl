@@ -1,7 +1,6 @@
 package protocol
 
 import (
-	"bytes"
 	"encoding/hex"
 	"fmt"
 )
@@ -229,17 +228,14 @@ func (event DockEvent) String() string {
 }
 
 func NewDockEvent(cmd Command, direction Direction, data []byte) *DockEvent {
-	var buf bytes.Buffer
-	buf.Write(data)
-	if len(data)%4 != 0 {
-		pad := 4 - len(data)%4
-		buf.Write(make([]byte, pad, pad))
-	}
+	l := len(data)
+	d := make([]byte, l+(4-l%4)%4)
+	copy(d, data)
 	return &DockEvent{
 		Direction: direction,
 		Command:   cmd,
-		Data:      buf.Bytes(),
-		Length:    uint32(len(data)),
+		Data:      d,
+		Length:    uint32(l),
 	}
 }
 
