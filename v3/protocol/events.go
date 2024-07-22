@@ -1,6 +1,8 @@
 package protocol
 
 import (
+	"bytes"
+	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 )
@@ -237,6 +239,16 @@ func NewDockEvent(cmd Command, direction Direction, data []byte) *DockEvent {
 		Data:      d,
 		Length:    uint32(l),
 	}
+}
+
+func (event DockEvent) Encode() []byte {
+	buf := new(bytes.Buffer)
+	binary.Write(buf, binary.BigEndian, uint32(NEWT))
+	binary.Write(buf, binary.BigEndian, uint32(DOCK))
+	binary.Write(buf, binary.BigEndian, uint32(event.Command))
+	binary.Write(buf, binary.BigEndian, uint32(event.Length))
+	buf.Write(event.Data)
+	return buf.Bytes()
 }
 
 func IsQuitEvent(event Event) bool {

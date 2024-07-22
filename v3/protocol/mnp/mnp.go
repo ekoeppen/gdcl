@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"gitlab.com/40hz/newton/gdcl/v3/fsm"
 	"gitlab.com/40hz/newton/gdcl/v3/protocol"
-	"log"
 )
 
 const (
@@ -115,7 +114,6 @@ func processIn(event *protocol.MnpEvent) {
 		} else {
 			dockPacket.Data = append(dockPacket.Data, event.Data[3:]...)
 		}
-		log.Println(dockPacket)
 		if uint32(len(dockPacket.Data)) >= dockPacket.Length {
 			dockPacketStarted = false
 			protocol.Events <- &dockPacket
@@ -126,13 +124,7 @@ func processIn(event *protocol.MnpEvent) {
 }
 
 func processOut(event *protocol.DockEvent) {
-	eventDataBuf := new(bytes.Buffer)
-	binary.Write(eventDataBuf, binary.BigEndian, uint32(protocol.NEWT))
-	binary.Write(eventDataBuf, binary.BigEndian, uint32(protocol.DOCK))
-	binary.Write(eventDataBuf, binary.BigEndian, event.Command)
-	binary.Write(eventDataBuf, binary.BigEndian, uint32(event.Length))
-	eventDataBuf.Write(event.Data)
-	eventData := eventDataBuf.Bytes()
+	eventData := event.Encode()
 	for len(eventData) > 0 {
 		sendStateVariable++
 		buf := new(bytes.Buffer)
