@@ -67,15 +67,15 @@ func processIn(event *protocol.DockEvent) {
 			data,
 		)
 	case getSoupNames:
-		var eventData nsof.Data = event.Data
-		soups := eventData.Factory()
-		log.Println(soups)
 		protocol.Events <- protocol.NewDockEvent(
 			protocol.GET_SOUP_NAMES,
 			protocol.Out,
 			[]byte{},
 		)
 	case showSoupNames:
+		var eventData nsof.Data = event.Data
+		soups := eventData.Factory()
+		log.Println(soups)
 		protocol.Events <- protocol.NewDockEvent(
 			protocol.GET_APP_NAMES,
 			protocol.Out,
@@ -83,6 +83,9 @@ func processIn(event *protocol.DockEvent) {
 		)
 		state = gettingAppList
 	case showAppList:
+		var eventData nsof.Data = event.Data
+		apps := eventData.Factory()
+		log.Println(apps)
 		protocol.Events <- protocol.NewDockEvent(
 			protocol.OPERATION_DONE,
 			protocol.Out,
