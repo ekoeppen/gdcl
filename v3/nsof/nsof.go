@@ -2,6 +2,7 @@ package nsof
 
 import (
 	"errors"
+    "strings"
 	"fmt"
 	"io"
 	"strconv"
@@ -248,10 +249,10 @@ func (frame *Frame) ReadNSOF(data *Data, objectStream *ObjectStream) Object {
 	*objectStream = append(*objectStream, frame)
 	elements := data.DecodeXLong()
 	frame.Slots = make([]Slot, elements)
-	for i, _ := range frame.Slots {
+	for i := range frame.Slots {
 		frame.Slots[i] = Slot{data.DecodeObject(objectStream), nil}
 	}
-	for i, _ := range frame.Slots {
+	for i := range frame.Slots {
 		frame.Slots[i].Value = data.DecodeObject(objectStream)
 	}
 	return frame
@@ -269,7 +270,20 @@ func (frame *Frame) WriteNSOF(data *Data) {
 }
 
 func (frame *Frame) String() string {
-	return "{}"
+	r := strings.Builder{}
+	r.WriteByte('{')
+	first := true
+	for _, slot := range frame.Slots {
+		if !first {
+			r.WriteString(", ")
+		}
+		r.WriteString(slot.Key.String())
+		r.WriteString(": ")
+		r.WriteString(slot.Value.String())
+		first = false
+	}
+	r.WriteByte('}')
+	return r.String()
 }
 
 func (frame *Frame) WriteTo(writer io.Writer) (n int64, err error) {
@@ -310,7 +324,7 @@ func (symbol *Symbol) WriteNSOF(data *Data) {
 }
 
 func (symbol *Symbol) String() string {
-	return symbol.Value
+	return "'" + symbol.Value
 }
 
 func NewSymbol() *Symbol {
@@ -338,7 +352,18 @@ func (plainArray *PlainArray) WriteNSOF(data *Data) {
 }
 
 func (plainArray *PlainArray) String() string {
-	return fmt.Sprintf("%v", plainArray.Objects)
+	r := strings.Builder{}
+	r.WriteByte('[')
+	first := true
+	for _, e := range plainArray.Objects {
+		if !first {
+			r.WriteString(", ")
+		}
+		r.WriteString(e.String())
+		first = false
+	}
+	r.WriteByte(']')
+	return r.String()
 }
 
 func NewPlainArray() *PlainArray {
@@ -394,7 +419,7 @@ func (str *String) WriteNSOF(data *Data) {
 }
 
 func (str *String) String() string {
-	return string(str.Value)
+	return "\"" + string(str.Value) + "\""
 }
 
 func NewString() *String {

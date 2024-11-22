@@ -1,0 +1,9 @@
+image: alpine/edge
+packages:
+  - go
+sources:
+  - https://git.sr.ht/~ekoeppen/gdcl
+tasks:
+  - build: |
+      cd gdcl/v3
+      go build
