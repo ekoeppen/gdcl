@@ -1,9 +1,15 @@
 image: alpine/edge
 packages:
   - go
+secrets:
+  - fa19c627-c19e-46f1-9257-30f9a6f15516
 sources:
   - https://git.sr.ht/~ekoeppen/gdcl
 tasks:
   - build: |
       cd gdcl/v3
       go build
+  - mirror-to-github: |
+      cd gdcl
+      set +x
+      git push --mirror "https://ekoeppen:$(cat $HOME/.token)@github.com/ekoeppen/gdcl"
