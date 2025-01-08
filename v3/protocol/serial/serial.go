@@ -1,13 +1,13 @@
 package serial
 
 import (
-	"gitlab.com/40hz/newton/gdcl/v3/protocol"
+	"gdcl/v3/protocol"
 	"go.bug.st/serial"
 	"log"
 )
 
 var (
-	fd      serial.Port
+	fd serial.Port
 )
 
 func SerialLoop(port string) {

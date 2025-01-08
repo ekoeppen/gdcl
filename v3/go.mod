@@ -1,4 +1,4 @@
-module gitlab.com/40hz/newton/gdcl/v3
+module gdcl/v3
 
 go 1.22.3
 

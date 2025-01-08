@@ -3,8 +3,8 @@ package mnp
 import (
 	"bytes"
 	"encoding/binary"
-	"gitlab.com/40hz/newton/gdcl/v3/fsm"
-	"gitlab.com/40hz/newton/gdcl/v3/protocol"
+	"gdcl/v3/fsm"
+	"gdcl/v3/protocol"
 )
 
 const (

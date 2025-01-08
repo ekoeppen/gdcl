@@ -1,9 +1,9 @@
 package info
 
 import (
-	"gitlab.com/40hz/newton/gdcl/v3/fsm"
-	"gitlab.com/40hz/newton/gdcl/v3/nsof"
-	"gitlab.com/40hz/newton/gdcl/v3/protocol"
+	"gdcl/v3/fsm"
+	"gdcl/v3/nsof"
+	"gdcl/v3/protocol"
 	"log"
 )
 

@@ -1,13 +1,13 @@
 package cmd
 
 import (
+	"gdcl/v3/protocol"
+	"gdcl/v3/protocol/dock"
+	"gdcl/v3/protocol/framing"
+	"gdcl/v3/protocol/mnp"
+	"gdcl/v3/protocol/modules/info"
+	"gdcl/v3/protocol/serial"
 	"github.com/spf13/cobra"
-	"gitlab.com/40hz/newton/gdcl/v3/protocol"
-	"gitlab.com/40hz/newton/gdcl/v3/protocol/dock"
-	"gitlab.com/40hz/newton/gdcl/v3/protocol/framing"
-	"gitlab.com/40hz/newton/gdcl/v3/protocol/mnp"
-	"gitlab.com/40hz/newton/gdcl/v3/protocol/modules/info"
-	"gitlab.com/40hz/newton/gdcl/v3/protocol/serial"
 	"log"
 )
 
@@ -19,6 +19,7 @@ const (
 
 var (
 	port         string
+	speed        int
 	activeModule int
 	logSerial    bool
 	logMnp       bool
@@ -28,6 +29,7 @@ var (
 func init() {
 	rootCmd.AddCommand(dockCmd)
 	dockCmd.Flags().StringVarP(&port, "port", "p", "/dev/ttyUSB0", "Serial Port")
+	dockCmd.Flags().IntVarP(&speed, "speed", "s", 115200, "Serial Speed")
 }
 
 func logEvent(event protocol.Event) {

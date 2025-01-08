@@ -1,8 +1,8 @@
 package cmd
 
 import (
+	"gdcl/v3/nsof"
 	"github.com/spf13/cobra"
-	"gitlab.com/40hz/newton/gdcl/v3/nsof"
 	"log"
 	"os"
 )

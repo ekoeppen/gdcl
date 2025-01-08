@@ -1,9 +1,9 @@
 package framing
 
 import (
-	"gitlab.com/40hz/newton/gdcl/v3/crc16"
-	"gitlab.com/40hz/newton/gdcl/v3/fsm"
-	"gitlab.com/40hz/newton/gdcl/v3/protocol"
+	"gdcl/v3/crc16"
+	"gdcl/v3/fsm"
+	"gdcl/v3/protocol"
 )
 
 const (
@@ -103,7 +103,7 @@ func processOut(event *protocol.MnpEvent) {
 	outBuf = append(outBuf, byte(crc&0xff), byte(crc>>8))
 	protocol.Events <- &protocol.SerialEvent{
 		Direction: protocol.Out,
-		Data: outBuf,
+		Data:      outBuf,
 	}
 }
 
