@@ -10,11 +10,11 @@ var (
 	fd serial.Port
 )
 
-func SerialLoop(port string) {
+func SerialLoop(port string, speed int) {
 	var err error
-	log.Println("Starting serial loop")
+	log.Println("Starting serial loop on port", port)
 	mode := &serial.Mode{
-		BaudRate: 115200,
+		BaudRate: speed,
 	}
 	fd, err = serial.Open(port, mode)
 	if err != nil {
