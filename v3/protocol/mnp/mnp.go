@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"gdcl/v3/fsm"
 	"gdcl/v3/protocol"
+	"log"
 )
 
 const (
@@ -39,17 +40,18 @@ type outstandingPacket struct {
 }
 
 var (
-	state                      int = idle
-	maxInfoLength              int
-	lastAckSequenceNumber      byte
-	outstandingPackets         []outstandingPacket
-	maxOutstanding             byte
-	sendCreditStateVariable    byte
-	receiveCreditStateVariable byte
-	sendStateVariable          byte
-	receiveStateVariable       byte
-	dockPacket                 protocol.DockEvent
-	dockPacketStarted          bool
+	state                     int = idle
+	maxInfoLength             int
+	lastAckSequenceNumber     byte
+	outstandingPackets        []outstandingPacket
+	maxOutstanding            byte
+	sendCredits               byte
+	receiveCredits            byte
+	localSendSequenceNumber   byte
+	peerSendSequenceNumber    byte
+	peerReceiveSequenceNumber byte
+	dockPacket                protocol.DockEvent
+	dockPacketStarted         bool
 )
 
 var transitions = []fsm.Transition[int, byte, int]{
@@ -71,7 +73,7 @@ func processIn(event *protocol.MnpEvent) {
 	switch action {
 	case sendLinkRequestResponse:
 		framingMode := event.Data[13]
-		maxOutstanding = event.Data[16]
+		maxOutstanding = 1 // event.Data[16]
 		dataPhaseOpt := event.Data[23]
 		if dataPhaseOpt&0x1 == 0x1 {
 			maxInfoLength = 256
@@ -89,20 +91,30 @@ func processIn(event *protocol.MnpEvent) {
 			Direction: protocol.Out,
 			Data:      buf,
 		}
+		receiveCredits = maxOutstanding
 	case handleLinkAcknowledgement:
-		receiveStateVariable := event.Data[2]
-		adjustedCredit := int(event.Data[3]) - len(outstandingPackets)
-		if adjustedCredit > 0 && adjustedCredit <= 8 {
-			receiveCreditStateVariable = byte(adjustedCredit)
-		} else {
-			receiveCreditStateVariable = 0
+		peerReceiveSequenceNumber = event.Data[2]
+		receiveCredits = event.Data[3]
+		if receiveCredits > maxOutstanding {
+			receiveCredits = maxOutstanding
 		}
-		lastAckSequenceNumber = receiveStateVariable
+		lastAckSequenceNumber = peerReceiveSequenceNumber
+		for i := 0; i < len(outstandingPackets) && receiveCredits > 0; i++ {
+			packet := outstandingPackets[i]
+			if packet.sendSequenceNumber <= peerReceiveSequenceNumber {
+				continue
+			}
+			protocol.Events <- &protocol.MnpEvent{
+				Direction: protocol.Out,
+				Data:      packet.data,
+			}
+			receiveCredits--
+		}
 	case handleLinkTransfer:
-		receiveStateVariable = event.Data[2]
+		peerSendSequenceNumber = event.Data[2]
 		protocol.Events <- &protocol.MnpEvent{
 			Direction: protocol.Out,
-			Data:      []byte{3, la, receiveStateVariable, 8},
+			Data:      []byte{3, la, peerSendSequenceNumber, 8},
 		}
 		if !dockPacketStarted {
 			buf := bytes.NewBuffer(event.Data[11:])
@@ -126,23 +138,31 @@ func processIn(event *protocol.MnpEvent) {
 
 func processOut(event *protocol.DockEvent) {
 	eventData := event.Encode()
+	log.Print("PO")
 	for len(eventData) > 0 {
-		sendStateVariable++
+		localSendSequenceNumber++
 		buf := new(bytes.Buffer)
 		binary.Write(buf, binary.BigEndian, byte(2))
 		binary.Write(buf, binary.BigEndian, byte(lt))
-		binary.Write(buf, binary.BigEndian, byte(sendStateVariable))
+		binary.Write(buf, binary.BigEndian, byte(localSendSequenceNumber))
 		n := len(eventData)
 		if n > int(maxInfoLength) {
 			n = int(maxInfoLength)
 		}
 		buf.Write(eventData[:n])
 		eventData = eventData[n:]
-		protocol.Events <- &protocol.MnpEvent{
-			Direction: protocol.Out,
-			Data:      buf.Bytes(),
+		log.Printf("PO %d %d %d", receiveCredits, maxOutstanding, localSendSequenceNumber)
+		outstandingPackets = append(outstandingPackets, outstandingPacket{buf.Bytes(), localSendSequenceNumber})
+		if receiveCredits > 0 {
+			protocol.Events <- &protocol.MnpEvent{
+				Direction: protocol.Out,
+				Data:      buf.Bytes(),
+			}
+			receiveCredits--
+			log.Printf("PO remaining %d", receiveCredits)
 		}
 	}
+	log.Print("PO done")
 }
 
 func Process(event protocol.Event) {

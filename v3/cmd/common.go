@@ -37,7 +37,9 @@ func logEvent(event protocol.Event) {
 func eventLoop(port string, speed int, eventHandler func(event protocol.Event)) {
 	log.Println("Starting event loop")
 	go serial.SerialLoop(port, speed)
-	logDock = true
+	logDock = false
+	logMnp = true
+	logSerial = false
 	for {
 		event := <-protocol.Events
 		logEvent(event)

@@ -18,7 +18,7 @@ func SerialLoop(port string, speed int) {
 	}
 	fd, err = serial.Open(port, mode)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error opening %s: %s", port, err)
 	}
 
 	for {
