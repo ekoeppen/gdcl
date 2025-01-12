@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"gdcl/v3/fsm"
 	"gdcl/v3/protocol"
-	"log"
 )
 
 const (
@@ -66,6 +65,8 @@ var transitions = []fsm.Transition[int, byte, int]{
 	{State: dataPhase, Event: lt, NewState: dataPhase, Action: handleLinkTransfer},
 }
 
+var ReducedWindow = true
+
 func processIn(event *protocol.MnpEvent) {
 	var action int
 	var packetType = event.Data[1]
@@ -73,7 +74,11 @@ func processIn(event *protocol.MnpEvent) {
 	switch action {
 	case sendLinkRequestResponse:
 		framingMode := event.Data[13]
-		maxOutstanding = 1 // event.Data[16]
+		if ReducedWindow {
+			maxOutstanding = 1
+		} else {
+			maxOutstanding = event.Data[16]
+		}
 		dataPhaseOpt := event.Data[23]
 		if dataPhaseOpt&0x1 == 0x1 {
 			maxInfoLength = 256
@@ -138,7 +143,6 @@ func processIn(event *protocol.MnpEvent) {
 
 func processOut(event *protocol.DockEvent) {
 	eventData := event.Encode()
-	log.Print("PO")
 	for len(eventData) > 0 {
 		localSendSequenceNumber++
 		buf := new(bytes.Buffer)
@@ -151,7 +155,6 @@ func processOut(event *protocol.DockEvent) {
 		}
 		buf.Write(eventData[:n])
 		eventData = eventData[n:]
-		log.Printf("PO %d %d %d", receiveCredits, maxOutstanding, localSendSequenceNumber)
 		outstandingPackets = append(outstandingPackets, outstandingPacket{buf.Bytes(), localSendSequenceNumber})
 		if receiveCredits > 0 {
 			protocol.Events <- &protocol.MnpEvent{
@@ -159,10 +162,8 @@ func processOut(event *protocol.DockEvent) {
 				Data:      buf.Bytes(),
 			}
 			receiveCredits--
-			log.Printf("PO remaining %d", receiveCredits)
 		}
 	}
-	log.Print("PO done")
 }
 
 func Process(event protocol.Event) {
